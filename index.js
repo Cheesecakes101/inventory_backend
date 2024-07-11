@@ -12,8 +12,9 @@ app.use(cors());
 const mongoose= require("mongoose");
 
 mongoose.set("strictQuery",true)
+require('dotenv').config()
+mongoose.connect(process.env.MONGODB_URL)
 
-mongoose.connect("mongodb+srv://dhamijakaustubh:inventory@inventory.alfuqv4.mongodb.net/?retryWrites=true&w=majority&appName=inventory")
 .then(()=>{
     console.log("mongodb connected")
 })
