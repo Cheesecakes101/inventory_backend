@@ -13,7 +13,7 @@ const mongoose= require("mongoose");
 
 mongoose.set("strictQuery",true)
 
-mongoose.connect("mongodb+srv://dhamijakaustubh:inventory@inventory.o7yketa.mongodb.net/")
+mongoose.connect("mongodb+srv://dhamijakaustubh:inventory@inventory.alfuqv4.mongodb.net/?retryWrites=true&w=majority&appName=inventory")
 .then(()=>{
     console.log("mongodb connected")
 })
