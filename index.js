@@ -13,12 +13,14 @@ const mongoose= require("mongoose");
 
 mongoose.set("strictQuery",true)
 require('dotenv').config()
+console.log(process.env.MONGODB_URL)
 mongoose.connect(process.env.MONGODB_URL)
 
 .then(()=>{
     console.log("mongodb connected")
 })
-.catch(()=>{
+.catch((error)=>{
+	console.log(error);
     console.log("failed");
 })
 
