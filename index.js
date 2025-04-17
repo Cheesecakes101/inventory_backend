@@ -1,97 +1,97 @@
-const express =require("express");
-// const collection= require("./mongo");
-const dashboardRoute=require("./controller/dashboardRoute");
-const cors =require("cors");
-const bodyParser=require("body-parser");
-const app=express();
+const express = require("express");
+const dashboardRoute = require("./controller/dashboardRoute");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+require('dotenv').config();
+
+const app = express();
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
-const mongoose= require("mongoose");
 
-mongoose.set("strictQuery",true)
-require('dotenv').config()
-console.log(process.env.MONGODB_URL)
+// MongoDB Connection
+mongoose.set("strictQuery", true);
+console.log(process.env.MONGODB_URL);
 mongoose.connect(process.env.MONGODB_URL)
-
-.then(()=>{
-    console.log("mongodb connected")
-})
-.catch((error)=>{
-	console.log(error);
+  .then(() => console.log("mongodb connected"))
+  .catch((error) => {
+    console.log(error);
     console.log("failed");
-})
+  });
 
-var db=mongoose.connection;
-// db.on("open",()=>console.log("connected to DB"));
-// db.on("error",()=>console.log("error occured"));
+// Schema & Model
+const newSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
+});
 
-const newSchema= new mongoose.Schema({
-    username:{
-        type:String,
-        required:true
-    },
-    password:{
-        type:String,
-        required:true
-    },
-})
+const collection = mongoose.model("collection", newSchema);
 
-const collection= mongoose.model("collection",newSchema);
+// Password Validation Function
+const isValidPassword = (password) => {
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  return regex.test(password);
+};
 
-app.get("/",cors(),(req,res)=>{
+// Routes
+app.get("/", (req, res) => {
+  res.send("Welcome to the Inventory Management System Backend");
+});
 
-})
+// Login Route
+app.post("/", async (req, res) => {
+  const { username, password } = req.body;
 
+  try {
+    const check = await collection.findOne({ username, password });
 
-app.post("/",async(req,res)=>{
-    const {username,password}=req.body
-
-    try {
-        const check=await collection.findOne({username:username})
-        const checkPassword=await collection.findOne({password:password})
-
-        if(check && checkPassword){
-            res.json("exist")
-        }else{
-            res.json("not exist")
-        }
-    } catch (error) {
-        console.log(error);
-        res.json("not exist")
+    if (check) {
+      res.json("exist");
+    } else {
+      res.json("not exist");
     }
-})
+  } catch (error) {
+    console.log(error);
+    res.json("not exist");
+  }
+});
 
+// Register Route with Password Validation
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
 
+  if (!isValidPassword(password)) {
+    return res.status(400).json("Password does not meet complexity requirements");
+  }
 
-app.post("/register",async(req,res)=>{
-    const {username, password}=req.body
+  try {
+    const check = await collection.findOne({ username });
 
-    const data={
-        username:username,
-        password:password
+    if (check) {
+      res.json("exist");
+    } else {
+      await collection.insertMany([{ username, password }]);
+      res.json("not exist");
     }
+  } catch (error) {
+    console.log(error);
+    res.json("not exist");
+  }
+});
 
-    try {
-        const check=await collection.findOne({username:username})
+// Dashboard Route
+app.use("/dashboardRoute", dashboardRoute);
 
-        if(check){
-            res.json("exist")
-        }else{
-            res.json("not exist")
-            await collection.insertMany([data])
-        }
-    } catch (error) {
-        console.log(error);
-        res.json("not exist")
-    }
-})
-
-app.use("/dashboardRoute",dashboardRoute);
-
-
-app.listen(3000,()=>{
-    console.log("port connected");
-})
+// Server Listen
+app.listen(3000, () => {
+  console.log("port connected");
+});
